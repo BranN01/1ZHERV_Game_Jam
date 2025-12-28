@@ -7,10 +7,12 @@ public class PlayerMovement : MonoBehaviour {
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private Vector2 moveInput;
+    private Animator anim;
 
     void Start()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        anim = GetComponentInChildren<Animator>();
+        spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         rb = GetComponent<Rigidbody2D>();
 
         // Ensure top-down physics settings
@@ -34,6 +36,10 @@ public class PlayerMovement : MonoBehaviour {
         // Apply movement physics
         // .normalized ensures the player doesn't move faster diagonally
         rb.velocity = moveInput.normalized * speed;
+
+        if (anim != null) {
+            anim.SetFloat("Speed", rb.velocity.magnitude);
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)

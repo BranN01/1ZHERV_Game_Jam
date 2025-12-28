@@ -7,10 +7,11 @@ public class NPCMovement : MonoBehaviour
     public bool isZombie = false; // Tracks if the NPC is currently infected
     
     [Header("Sprites")]
-    public Sprite zombieSprite;
+    public GameObject humanVisual; 
+    public GameObject zombieVisual;
 
     private Rigidbody2D rb;
-    private SpriteRenderer sr;
+    private Animator currentAnim;
     private Vector2 currentDirection;
 
     [Header("Anti-Stuck Logic")]
@@ -22,11 +23,12 @@ public class NPCMovement : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        sr = GetComponent<SpriteRenderer>();
         
         // Setup physics for top-down movement
         rb.gravityScale = 0;
         rb.freezeRotation = true;
+
+        RefreshState();
 
         if (isZombie) 
         {
@@ -46,6 +48,16 @@ public class NPCMovement : MonoBehaviour
         else Wander();
 
         CheckIfStuck();
+
+        if (rb.velocity.x > 0.1f) 
+            transform.localScale = new Vector3(-0.17f, 0.17f, 1f);
+        else if (rb.velocity.x < -0.1f) 
+            transform.localScale = new Vector3(0.17f, 0.17f, 1f);
+
+        if (currentAnim != null)
+        {
+            currentAnim.SetFloat("Speed", rb.velocity.magnitude);
+        }
     }
 
     // Move in the current random direction
@@ -97,13 +109,16 @@ public class NPCMovement : MonoBehaviour
         if (isZombie) return;
 
         isZombie = true;
-        
-        if (zombieSprite != null)
-        {
-            sr.sprite = zombieSprite;
-        }
-
         speed *= 1.1f;
+        RefreshState();
+    }
+
+    private void RefreshState()
+    {
+        if (humanVisual != null) humanVisual.SetActive(!isZombie);
+        if (zombieVisual != null) zombieVisual.SetActive(isZombie);
+
+        currentAnim = GetComponentInChildren<Animator>();
     }
 
     void OnCollisionEnter2D(Collision2D collision)
@@ -127,15 +142,12 @@ public class NPCMovement : MonoBehaviour
     }
 
     // Reverts a zombie back to human state (used by the fountain)
-    public void BecomeHuman(Sprite humanSprite)
+    public void BecomeHuman()
     {
         if (!isZombie) return;
 
         isZombie = false;
-    
-        if (sr == null) sr = GetComponent<SpriteRenderer>();
-        sr.sprite = humanSprite;
-
         speed /= 1.1f;
+        RefreshState();
     }
 }
